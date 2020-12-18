@@ -1,17 +1,23 @@
 import datetime
 import hashlib
 import json
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+import requests
+from uuid import uuid4
+from urllib.parse import urlparse
 
 
-# Building a Blockchain
+# Part-1 Building a Blockchain
+
 class Blockchain:
     def __init__(self):
         """
         Create Blockchain and a genesis block
         """
         self.chain = []
+        self.transactions = []
         self.create_block(proof=1, previous_hash='0')
+        self.nodes = ()
 
     def create_block(self, proof, previous_hash):
         """
@@ -22,7 +28,9 @@ class Blockchain:
         block = {'index': len(self.chain) + 1,
                  'timestamp': str(datetime.datetime.now()),
                  'proof': proof,
-                 'previous_hash': previous_hash}
+                 'previous_hash': previous_hash,
+                 'transactions': self.transactions}
+        self.transactions = []
         self.chain.append(block)
         return block
 
@@ -80,6 +88,19 @@ class Blockchain:
             block_index += 1
         return True
 
+    def add_transactions(self, sender, receiver, amount):
+        self.transactions.append({'sender': sender,
+                                  'receiver': receiver,
+                                  'amount': amount})
+        previous_block = self.get_previous_block()
+        return previous_block['index'] + 1
+
+    def add_node(self, address):
+        parsed_url = urlparse(address)
+        self.nodes.add(parsed_url.netloc)
+
+
+# Part-2 Mining our Blockchain
 
 # Creating a web app
 app = Flask(__name__)
@@ -124,6 +145,8 @@ def is_valid():
         response = {'message': 'We have a problem. The Blockchain is not valid'}
     return jsonify(response), 200
 
+
+# Part-3 Decentralizing our Blockchain
 
 # Running the app
 app.run(host='0.0.0.0', port=1710)
